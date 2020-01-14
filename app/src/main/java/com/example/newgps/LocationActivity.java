@@ -379,20 +379,21 @@ public class LocationActivity extends FragmentActivity implements LocationListen
                 " Longitude: %f\n " +
                 " Bearing: %f " +
                 " Altitude: %f",
-                location.getLatitude(), location.getLongitude(), location.getBearing(), location.getAltitude());
+                location.getLatitude(), location.getLongitude(), (float)(attitude[0] * RAD2DEG), location.getAltitude());
 
         textView.setText(strTmp);
 
         if(location_list == null || location_list.size() == 0){
             location_list.add(0,(float)location.getLatitude());
             location_list.add(1,(float)location.getLongitude());
-            location_list.add(2,location.getBearing());
-            //location_list.add(3,(float)location.getAltitude());
+            //location_list.add(2,location.getBearing());
+            location_list.add(2,0f);
+            location_list.add(3,(float)location.getAltitude());
         }else{
             location_list.set(0,(float)location.getLatitude());
             location_list.set(1,(float)location.getLongitude());
-            location_list.set(2,location.getBearing());
-           // location_list.set(3,(float)location.getAltitude());
+            //location_list.set(2,location.getBearing());
+            location_list.set(3,(float)location.getAltitude());
         }
 
     }
@@ -453,12 +454,14 @@ public class LocationActivity extends FragmentActivity implements LocationListen
             textGyro.setText(strEle);
 
             if(location_list == null || location_list.size() == 0){
-
-                location_list.add(3,(float)(attitude[0] * RAD2DEG));
+                location_list.add(0,0f);
+                location_list.add(1,0f);
+                location_list.add(2,(float)(attitude[0] * RAD2DEG));
+                location_list.add(3,0f);
 
             }else{
 
-                location_list.set(3,(float)(attitude[0] * RAD2DEG));
+                location_list.set(2,(float)(attitude[0] * RAD2DEG));
 
             }
 
