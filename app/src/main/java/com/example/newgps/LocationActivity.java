@@ -231,6 +231,7 @@ public class LocationActivity extends FragmentActivity implements LocationListen
                     -
                     Math.sin(Math.toRadians((double)location_list.get(0))) * Math.cos(Math.toRadians(Deltax)), Math.sin(Math.toRadians(Deltax))
             ));
+
             return Fai - (double)location_list.get(2);
         }
 
@@ -446,22 +447,28 @@ public class LocationActivity extends FragmentActivity implements LocationListen
                     rotationMatrix,
                     attitude);
 
+            double azimuth = attitude[0] * RAD2DEG;
+
+            if(azimuth < 0){
+                azimuth = 360 - azimuth * (-1);
+            }
+
             String strEle = String.format(Locale.US, "Elevation\n " +
                             "azimuth: %d " +
                             "pitch: %d " +
                             "roll: %d",
-            (int)(attitude[0] * RAD2DEG), (int)(attitude[1] * RAD2DEG), (int)(attitude[2] * RAD2DEG));
+            (int)azimuth, (int)(attitude[1] * RAD2DEG), (int)(attitude[2] * RAD2DEG));
             textGyro.setText(strEle);
 
             if(location_list == null || location_list.size() == 0){
                 location_list.add(0,0f);
                 location_list.add(1,0f);
-                location_list.add(2,(float)(attitude[0] * RAD2DEG));
+                location_list.add(2,(float)azimuth);
                 location_list.add(3,0f);
 
             }else{
 
-                location_list.set(2,(float)(attitude[0] * RAD2DEG));
+                location_list.set(2,(float)azimuth);
 
             }
 
