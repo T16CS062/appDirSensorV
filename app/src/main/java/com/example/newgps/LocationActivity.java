@@ -18,6 +18,8 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -59,8 +61,12 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
     private LocationManager locationManager;
     public TextView textView,textGyro,textTweet,textDire,textElevation;
-
+    public boolean fragment_flag = false;
     protected final static double RAD2DEG = 180/Math.PI;
+
+    public TestFragment fragment;
+    public FragmentManager fragmentManager;
+    public FragmentTransaction fragmentTransaction;
 
     int i;
 
@@ -197,7 +203,7 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
                 // ビューの更新を依頼する
                 // view.invalidate(); ではダメ
-                arrowView.postInvalidate();
+
             }
         }, interval, interval);
 
@@ -231,8 +237,11 @@ public class LocationActivity extends FragmentActivity implements LocationListen
                     -
                     Math.sin(Math.toRadians((double)location_list.get(0))) * Math.cos(Math.toRadians(Deltax)), Math.sin(Math.toRadians(Deltax))
             ));
-
-            return Fai - (double)location_list.get(2);
+            if(Fai - (double)location_list.get(2) < 0){
+                return 360 + Fai - (double)location_list.get(2);
+            }else {
+                return Fai - (double) location_list.get(2);
+            }
         }
 
         return 0;
@@ -405,7 +414,7 @@ public class LocationActivity extends FragmentActivity implements LocationListen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        Log.d("debug","onSensorChanged");
+        // Log.d("debug","onSensorChanged");
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
           //  strBuf_gyro = null;
@@ -435,6 +444,82 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
         }else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
             gravity = event.values.clone();
+
+            float sensorZ = event.values[2];
+
+
+            if(((sensorZ >= 0 && sensorZ < 3.0) || (sensorZ <= 0 && sensorZ > -3.0))) {
+                if (fragment_flag == false) {
+
+                    fragment_flag = true;
+
+                    // Bundleを設定
+                    Bundle bundle = new Bundle();
+                    double ele = balloon_user_elevation();
+                    bundle.putDouble("elevation", ele);
+
+                    // Fragmentを生成
+                    fragment = new TestFragment();
+
+                    // Bundleを設定してFragmentの初期値を渡す
+                    fragment.setArguments(bundle);
+
+                    fragmentManager = getSupportFragmentManager();
+                    fragmentTransaction = fragmentManager.beginTransaction();
+
+                    // BackStackを設定
+                    fragmentTransaction.addToBackStack(null);
+
+                    // パラメータを設定
+                    //fragmentTransaction.replace(R.id.container,TestFragment.newInstance("Fragment"));
+                    fragmentTransaction.replace(R.id.container, fragment);
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                    fragmentTransaction.commit();
+
+
+                }else{
+                    /*
+                    // Bundleを設定
+                    Bundle bundle = new Bundle();
+                    double ele = balloon_user_elevation();
+                    bundle.putDouble("elevation", ele);
+
+                    // Fragmentを生成
+                    //fragment = new TestFragment();
+
+                    fragment.setArguments(bundle);
+
+                    fragmentManager = getSupportFragmentManager();
+                    */
+
+                    FragmentManager fm = getSupportFragmentManager();
+
+                    TestFragment tf = (TestFragment)fm.findFragmentById(R.id.container);
+                    if(tf != null) {
+                        tf.SetRotationView((float) balloon_user_elevation());
+                    }
+
+                    /*
+                    fragmentTransaction = fragmentManager.beginTransaction();
+
+                    // BackStackを設定
+                    fragmentTransaction.addToBackStack(null);
+
+                    // パラメータを設定
+                    //fragmentTransaction.replace(R.id.container,TestFragment.newInstance("Fragment"));
+                    fragmentTransaction.replace(R.id.container, fragment);
+                    fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                    fragmentTransaction.commit();
+                    */
+
+
+
+                }
+            }else if((sensorZ > 3.0 || sensorZ < -3.0) && fragment_flag == true ){
+                fragment_flag = false;
+                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+            }
+
         }
 
         if(geomagnetic != null && gravity != null){
@@ -485,10 +570,11 @@ public class LocationActivity extends FragmentActivity implements LocationListen
         }
 
         String strDir = String.format(Locale.US,
-                " Direction : %f \n" + " Distance : %f km\n" + " Elevation : %f\n ",
+                " Azimuth : %f °\n" + " Distance : %f km\n" + " Elevation : %f °\n ",
                 arrow_direction(), balloon_user_distance(), balloon_user_elevation());
 
         textDire.setText(strDir);
+        textDire.invalidate();
 
     }
 
