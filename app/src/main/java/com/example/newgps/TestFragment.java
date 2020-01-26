@@ -139,4 +139,10 @@ public class TestFragment extends Fragment{
     public TestFragment() {
     }
 
+    public void FragmentEnd(){
+        //getFragmentManager().beginTransaction().remove(this).commit();
+        getFragmentManager().popBackStack();
+
+    }
+
 }
