@@ -147,6 +147,8 @@ public class LocationActivity extends FragmentActivity implements LocationListen
             }
         });
 
+        startGPS();
+
         // GPS測位終了
         Button buttonStop = findViewById(R.id.button_stop);
         buttonStop.setOnClickListener(new View.OnClickListener() {
@@ -269,20 +271,15 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
         if(location_list != null && location_list.size() != 0 && balloon_list != null && balloon_list.size() != 0) {
             double theta = Math.atan(
-                                ((double)balloon_list.get(2) - (double)location_list.get(3)) / balloon_user_distance()
+                    (((double)balloon_list.get(2) - (double)location_list.get(3)) * 0.001) / balloon_user_distance()
                     );
 
+            if((attitude[2] * RAD2DEG) < 0) { // 右に
+                theta = Math.toDegrees(theta) + (attitude[1] * RAD2DEG);
+            }else{                            // 左に
+                theta = (Math.toDegrees(theta) + (attitude[1] * RAD2DEG)) * (-1);
+            }
 
-
-
-            theta = Math.toDegrees(theta) + (attitude[1] * RAD2DEG);
-
-            //System.out.println("theta:" + theta);
-/*
-            System.out.println(balloon_list.get(2));
-            System.out.println(location_list.get(3));
-            System.out.println(balloon_user_distance());
-*/
             return theta;
         }
 
@@ -574,9 +571,11 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 */
         }
 
+
+        double dis = balloon_user_distance();
         String strDir = String.format(Locale.US,
                 " Azimuth : %f °\n" + " Distance : %f km\n" + " Elevation : %f °\n ",
-                arrow_direction(), balloon_user_distance(), balloon_user_elevation());
+                arrow_direction(), dis, balloon_user_elevation());
 
         textDire.setText(strDir);
         textDire.invalidate();
@@ -678,18 +677,18 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
                  int index = this.str_tweet.indexOf(" ");
                  int index2 = this.str_tweet.indexOf(" ", index + 1);
+                 int index3 = this.str_tweet.indexOf(" ", index2 + 1);
+
 
                  if (balloon_list == null || balloon_list.size() == 0) {
                      balloon_list.add(0, Float.valueOf(this.str_tweet.substring(1, index)));
                      balloon_list.add(1, Float.valueOf(this.str_tweet.substring(index + 2, index2)));
-                     balloon_list.add(2, Float.valueOf(this.str_tweet.substring(index2 + 2)));
-
+                     balloon_list.add(2, Float.valueOf(this.str_tweet.substring(index2 + 2,index3)));
 
                  } else {
                      balloon_list.set(0, Float.valueOf(this.str_tweet.substring(1, index)));
                      balloon_list.set(1, Float.valueOf(this.str_tweet.substring(index + 2, index2)));
-                     balloon_list.set(2, Float.valueOf(this.str_tweet.substring(index2 + 2)));
-
+                     balloon_list.set(2, Float.valueOf(this.str_tweet.substring(index2 + 2, index3)));
 
                  }
 
