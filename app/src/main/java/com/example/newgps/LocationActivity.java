@@ -96,6 +96,8 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
     float distance,direction; // 気球と端末の平面距離,方角
 
+    double azimuth = 0;
+
     Timer timer,timer_bearing;
 
     long interval = 30 /* msec */;
@@ -438,6 +440,11 @@ public class LocationActivity extends FragmentActivity implements LocationListen
 
         }else if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){
             geomagnetic = event.values.clone();
+            float x = event.values[0];
+            float y = event.values[1];
+
+            azimuth = magAzimuth(x,y);
+
 
         }else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
             gravity = event.values.clone();
@@ -534,11 +541,16 @@ public class LocationActivity extends FragmentActivity implements LocationListen
                     rotationMatrix,
                     attitude);
 
+
+
+// 磁気センサと加速度センサを組み合わせた方位角の算出
+/*
             double azimuth = attitude[0] * RAD2DEG;
 
             if(azimuth < 0){
                 azimuth = 360 - azimuth * (-1);
             }
+*/
 
             String strEle = String.format(Locale.US, "Elevation\n " +
                             "azimuth: %d " +
@@ -580,6 +592,14 @@ public class LocationActivity extends FragmentActivity implements LocationListen
         textDire.setText(strDir);
         textDire.invalidate();
 
+    }
+
+    public double magAzimuth(float x, float y) {
+        //double magtheta = Math.atan(Math.toRadians(y/x));
+
+        double magtheta = Math.toDegrees(Math.atan2(x,y));
+
+        return magtheta * (-1);
     }
 
 
